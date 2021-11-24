@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const creditscoring = require('./controllers/creditscoring');
 const cliente = require('./controllers/cliente');
 const database = require('./database/database');
+const empleado = require('./controllers/empleado');
 
 
 dotenv.config()
@@ -22,6 +23,10 @@ database.testDatabase();
 
 app.get('/creditscoring', (req, res) => {
 
+});
+
+app.post('/empleado_login',async (req,res)=>{
+   return await empleado.login(req,res);
 });
 
 app.post('/cliente_login', async (req, res) => {
