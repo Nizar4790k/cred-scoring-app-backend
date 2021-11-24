@@ -2,10 +2,10 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const dotenv = require('dotenv');
-const creditscoring = require('./controllers/creditscoring');
-const cliente = require('./controllers/cliente');
+const creditscoring = require('./controllers/creditscoring/creditscoring');
+const cliente = require('./controllers/cliente/cliente');
 const database = require('./database/database');
-const empleado = require('./controllers/empleado');
+const empleado = require('./controllers/empleado/empleado');
 
 
 dotenv.config()
@@ -21,8 +21,8 @@ database.testDatabase();
 
 
 
-app.get('/creditscoring', (req, res) => {
-
+app.post('/creditscoring', (req, res) => {
+    creditscoring.calculateCreditScoring(req,res);
 });
 
 app.post('/empleado_login',async (req,res)=>{

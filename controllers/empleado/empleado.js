@@ -1,5 +1,5 @@
-
 const { MongoClient } = require('mongodb');
+
 const login = async (req,res)=>{
 
     const  {username,password} = req.body;
@@ -14,7 +14,6 @@ const login = async (req,res)=>{
 
 
 }
-
 
 const checkEmployee = async (username,password)=>{
     
