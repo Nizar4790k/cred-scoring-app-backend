@@ -9,19 +9,20 @@ const login = async (req,res)=>{
 
     try{
     
-        const clientExist = await checkClient(username,password);
+        const codigoCliente = await checkClient(username,password);
 
-        if(!clientExist){
+        if(!codigoCliente){
             return res.status(404).json({message:"Cliente no registrado"});
         }
 
         const access_token = await getAcessToken();
         const auth_token = await getAuthorizationToken(username,password,access_token)   
-
+    
   
     return res.status(200).json({
         auth_token:auth_token,
-        access_token:access_token
+        access_token:access_token,
+        codigoCliente:codigoCliente
     });
     
      
@@ -49,7 +50,7 @@ const checkClient = async (username,password)=>{
         const clientes = await clientesCollection.find({ProfileCredentials:{Username:username,Password:password}}).toArray()
         
         if(clientes[0]){
-            return true;
+            return clientes[0].Codigo;
         }else{
             return false;
         }
@@ -104,5 +105,6 @@ const getAuthorizationToken= async (username,password,access_token)=>{
 
 module.exports = {
     login: login,
-    
+    getAcessToken:getAcessToken,
+    getAuthorizationToken:getAuthorizationToken
   };
