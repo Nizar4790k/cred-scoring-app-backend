@@ -6,13 +6,7 @@ const calculateQuantitativeScoring = async (access_token, auth_token) => {
     const savings = { counter: 0,totalPoints: 0 };
     const current = { counter: 0,  totalPoints: 0 };
     const invesment = { counter: 0, totalPoints: 0 };
-
-
-
-    let loans = { counter: 0, type: [], completed: 0 };
-
-
-    
+    const loan = { counter: 0, totalPoints: 0 };
 
     for(var i=0;i<accounts.length;i++){
 
@@ -20,7 +14,6 @@ const calculateQuantitativeScoring = async (access_token, auth_token) => {
 
         const accountId = accounts[i].Account[0].Identification;
 
-        
         let amount = accounts[i].Balance[0].Amount.Amount * 58;
         const accountTransactions = await getAccountsTransaction(accountId, access_token, auth_token);
         const accountType =accounts[i].AccountSubType;
@@ -41,8 +34,13 @@ const calculateQuantitativeScoring = async (access_token, auth_token) => {
                 break;
 
             case "Loan":
-
-                loans.counter++;
+                const options = accounts[i].Nickname;
+                const estatus = options.split("-")[2];
+                const service = options.split("-")[0];
+                const paymentsQuatity = options.split("-")[1];
+                amount = options.split("-")[3] *58;
+                loan.totalPoints += getLoansAccountPoints(amount, accountTransactions, paymentsQuatity);
+                loan.counter++;
                  break;
 
             case "Invesments":
@@ -57,9 +55,7 @@ const calculateQuantitativeScoring = async (access_token, auth_token) => {
         }
 
 
-    }
-
-    
+    } 
 
     if(savings.totalPoints!=0){
      savings.totalPoints = savings.totalPoints / savings.counter;
@@ -69,14 +65,15 @@ const calculateQuantitativeScoring = async (access_token, auth_token) => {
         current.totalPoints = current.totalPoints / current.counter;
     }
 
-
     if(invesment.totalPoints!=0){
         invesment.totalPoints = invesment.totalPoints/invesment.counter;
     }
     
-    
+    if(loan.totalPoints!=0){
+        loan.totalPoints = loan.totalPoints/loan.counter;
+    }
 
-    const quantitativeScoring = savings.totalPoints+ current.totalPoints+invesment.totalPoints;
+    const quantitativeScoring = savings.totalPoints+ current.totalPoints+invesment.totalPoints+loan.totalPoints;
     
     
 
@@ -144,8 +141,6 @@ const getSavingAccountPoints = (amount,accountTransactions)=>{
     return points;
 }
 
-
-
 const getCurrentAccountPoints= (amount,accountTransactions) =>{
  
     const basePoints = 100;
@@ -182,11 +177,44 @@ const getCurrentAccountPoints= (amount,accountTransactions) =>{
 
 }
 
+const getLoansAccountPoints = (amount,accountTransactions,paymentsQuatity)=>{
+    const basePoints = 175;
+    let points = 0;
+    let payment = { good:0, bad:0 }
 
+    if (amount <= 100000) {
+        points = basePoints * 0.35;
+    } else if (amount > 100000 && amount <= 500000) {
+        points = basePoints * 0.50;
+    } else if (amount > 500000 && amount <= 1000000) {
+        points = basePoints * 0.65;
+    } else if (amount > 1000000 && amount <= 3000000) {
+        points = basePoints * 0.85;
+    } else {
+        points = basePoints;
+    }
 
+    if (accountTransactions.length === 0) {
+        points = points;
 
-const getLoansAccountPoints = ()=>{
+    } else 
+    {
+        const percentToRemove = (100 / paymentsQuatity) / 100
+        
+        accountTransactions.forEach(transaction => {
 
+            if(transaction.TransactionInformation == "Correcto"){
+                payment.good++;
+            }
+            else{
+                points = points * (1 - percentToRemove); 
+                payment.bad++;
+            }
+
+        });
+    }
+
+    return points;
 }
 
 const getInvesmentAccountsPoints = (amount)=>{
