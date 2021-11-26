@@ -21,8 +21,8 @@ database.testDatabase();
 
 
 
-app.post('/creditscoring', (req, res) => {
-    creditscoring.calculateCreditScoring(req,res);
+app.post('/creditscoring', async (req, res) => {
+   await creditscoring.calculateCreditScoring(req,res);
 });
 
 app.post('/empleado_login',async (req,res)=>{

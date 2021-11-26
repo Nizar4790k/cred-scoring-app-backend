@@ -1,18 +1,48 @@
 const axios = require('axios');
 const { MongoClient } = require('mongodb');
 const qualitativeScoringModule = require('./qualitativeScoring.js');
+const quantitativeScoringModule = require('./quantitativeScoring');
+
+const { getAuthorizationToken,getAcessToken } = require('../cliente/cliente');
 
 const calculateCreditScoring= async (req,res)=>{
 
   
+    var {profileId,auth_token,access_token} = req.body;
 
-    const profileId = req.body.profileId;
-    
     const profile = await findClientOnDataBase(profileId);
-    
+
+    if(auth_token==="" && access_token===""){
+      
+
+      if(profile){
+        
+        try{
+          
+          access_token = await getAcessToken();
+          auth_token =  await getAuthorizationToken(profile.ProfileCredentials.Username,profile.ProfileCredentials.Password,access_token);
+          
+        }catch(err){
+          return res.status(401).json({message:"No autorizado"});
+        }
+
+
+      }else{
+        
+        return res.status(404).json({message:"Cliente no registrado"});
+      }
+      
+    }
+
+  
+
     const qualitativeScore= qualitativeScoringModule.calculateQualitativeScoring(profile);
 
-    return res.status(200).json({creditScoring:qualitativeScore});
+    const quantitativeScore =  await quantitativeScoringModule.calculateQuantitativeScoring(access_token,auth_token);
+
+    
+
+    return res.status(200).json({creditScoring:(qualitativeScore+quantitativeScore)});
 }
 
 

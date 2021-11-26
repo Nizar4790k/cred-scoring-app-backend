@@ -1,8 +1,9 @@
+
 const calculateQualitativeScoring= (profile)=>{
 
-    let qualitativeScoring=166.66;
+    let qualitativeScoring=166.66; // Gender and LegalEntityType are equals to 83.33
     
-    let age = Math.floor(Math.abs((new Date()-new Date(profile.DateOfBirth))/31557600000));
+    let age = getAge(profile.DateOfBirth);
     
     qualitativeScoring +=getAgePoints(age)
   
@@ -21,6 +22,10 @@ const calculateQualitativeScoring= (profile)=>{
   
   }
   
+  const getAge = (dateOfBirth)=>{
+    return Math.floor(Math.abs((new Date()-new Date(dateOfBirth))/31557600000)); 
+  }
+
   const getAgePoints =(age)=>{
   
     if(age<25){
