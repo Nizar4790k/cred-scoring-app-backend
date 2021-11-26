@@ -36,7 +36,7 @@ const calculateCreditScoring= async (req,res)=>{
 
   
 
-    const qualitativeScore= qualitativeScoringModule.calculateQualitativeScoring(profile);
+    const qualitativeScore= await qualitativeScoringModule.calculateQualitativeScoring(profile);
 
     const quantitativeScore =  await quantitativeScoringModule.calculateQuantitativeScoring(access_token,auth_token);
 
@@ -52,7 +52,7 @@ const findClientOnDataBase= async (profileId)=>{
   const dbName = process.env.DATABASE_NAME;
   
   try {
-      client.connect();
+      await client.connect();
       const db = client.db(dbName);
       
       const clientesCollection = await db.collection("clientes")
