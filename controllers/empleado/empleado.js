@@ -21,7 +21,7 @@ const checkEmployee = async (username,password)=>{
     const dbName = process.env.DATABASE_NAME;
     
     try {
-        client.connect();
+        await client.connect();
         const db = client.db(dbName);
         
         const empleadosCollection = await db.collection("empleados")
