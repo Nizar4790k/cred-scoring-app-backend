@@ -1,6 +1,7 @@
 const axios = require('axios');
 const { MongoClient } = require('mongodb');
-
+const qualitativeScoringModule = require('../creditscoring/qualitativeScoring.js');
+const quantitativeScoringModule = require('../creditscoring/quantitativeScoring');
 
 const login = async (req,res)=>{
 
@@ -101,10 +102,127 @@ const getAuthorizationToken= async (username,password,access_token)=>{
     
 }
 
+const getClientDetail = async (req,res)=>{
+
+  
+    var {profileId,auth_token,access_token} = req.body;
+
+    const profile = await findClientOnDataBase(profileId);
+
+    
+    
+
+    if(auth_token==="" && access_token===""){
+      
+
+      if(profile){
+        
+        try{
+          
+          access_token = await getAcessToken();
+          auth_token =  await getAuthorizationToken(profile.ProfileCredentials.Username,profile.ProfileCredentials.Password,access_token);
+          
+        }catch(err){
+          return res.status(401).json({message:"No autorizado"});
+        }
+
+
+      }else{
+        
+        return res.status(404).json({message:"Cliente no registrado"});
+      }
+      
+    }
+
+    
+
+    const qualitativeScore= await qualitativeScoringModule.calculateQualitativeScoring(profile);
+
+    const quantitativeScore =  await quantitativeScoringModule.calculateQuantitativeScoring(access_token,auth_token);
+
+    const creditScoring = qualitativeScore + quantitativeScore;
+    
+    
+
+    profile.CreditScoring = creditScoring;
+    
+    delete profile.ProfileCredentials;
+    delete profile.FamilyName;
+    delete profile.MarriedName;
+    delete profile.Title;
+    delete profile.SupplementaryData;
+
+    
+
+    await updateCreditScoring(profileId,creditScoring);
+
+
+
+    
+
+    return res.status(200).json({profile:profile});
+}
+
+const updateCreditScoring = async (profileId,creditScoring)=>{
+
+    console.log(profileId);
+    console.log(creditScoring);
+
+    const client = await new MongoClient(process.env.MONGODB_SERVER);
+    const dbName = process.env.DATABASE_NAME;
+    
+    await client.connect();
+
+    
+
+    try {
+        
+        const db = await client.db(dbName);
+        const clientesCollection = await db.collection("clientes");
+        
+        
+        await clientesCollection.updateOne({Codigo:profileId}, {$set: {"CreditScoring": creditScoring}});
+
+        console.log("Client's credit score updated");
+
+
+    }catch(err){
+        console.log(err);
+    }finally{
+        client.close();
+    }
+
+}
+
+
+const findClientOnDataBase= async (profileId)=>{
+  
+  const client = await new MongoClient(process.env.MONGODB_SERVER);
+  const dbName = process.env.DATABASE_NAME;
+  
+  try {
+      await client.connect();
+      const db = client.db(dbName);
+      
+      const clientesCollection = await db.collection("clientes")
+  
+      const clientes = await clientesCollection.find({Codigo:profileId}).toArray()
+      
+      return clientes[0];
+
+  }catch(err){
+      console.log(err)
+  }
+
+  
+}
+
 
 
 module.exports = {
     login: login,
     getAcessToken:getAcessToken,
-    getAuthorizationToken:getAuthorizationToken
+    getAuthorizationToken:getAuthorizationToken,
+    getClientDetail:getClientDetail
+
   };
