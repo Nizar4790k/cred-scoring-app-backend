@@ -33,9 +33,7 @@ app.post('/cliente_login', async (req, res) => {
  return cliente.login(req, res); 
 });
 
-app.get('/reportes',async(req,res)=>{
-  
-})
+
 
 
 app.listen(process.env.PORT || 3001, () => {

@@ -85,7 +85,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                 loan.counter++;
                  break;
 
-            case "Invesments":
+            case "Investments":
 
                 invesment.totalPoints +=getInvesmentAccountsPoints(amount)
              nextCredit +=amount;

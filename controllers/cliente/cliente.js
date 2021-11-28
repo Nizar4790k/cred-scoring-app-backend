@@ -11,6 +11,7 @@ const login = async (req,res)=>{
     try{
     
         const codigoCliente = await checkClient(username,password);
+        
 
         if(!codigoCliente){
             return res.status(404).json({message:"Cliente no registrado"});
@@ -50,6 +51,7 @@ const checkClient = async (username,password)=>{
     
         const clientes = await clientesCollection.find({ProfileCredentials:{Username:username,Password:password}}).toArray()
         
+
         if(clientes[0]){
             return clientes[0].Codigo;
         }else{
@@ -105,11 +107,11 @@ const getAuthorizationToken= async (username,password,access_token)=>{
 const getClientDetail = async (req,res)=>{
 
   
+
     var {profileId,auth_token,access_token} = req.body;
+    
 
     const profile = await findClientOnDataBase(profileId);
-
-    console.log(profile)
     
 
     if(auth_token==="" && access_token===""){
@@ -157,42 +159,42 @@ const getClientDetail = async (req,res)=>{
     };
     */
 
-    profile.CreditScore = creditScore; 
-    
+
+   const response =  {profile:profile,
+    scoring:{
+        creditScore:creditScore,
+        unPaymentProbability:quantitativeValues.unPaymentProbability,
+        dateCreated:profile.DateCreated
+    },
+    creditInProgress:{
+        loans:{
+            loansQuantity: quantitativeValues.loansQuantity,
+            loanStatusCount:quantitativeValues.loanStatusCount,
+
+        },
+        payments:quantitativeValues.payments,
+        currentLoans:quantitativeValues.currentLoans
+    },
+        nextCredit:quantitativeValues.nextCredit
+    };
+
     delete profile.ProfileCredentials;
     delete profile.FamilyName;
     delete profile.MarriedName;
     delete profile.Title;
     delete profile.SupplementaryData;
     delete profile.CreditScoring;
-
-   
+    delete profile.CreditScore;
+    delete profile.DateCreated;
     
 
     await updateCreditScore(profileId,creditScore);
 
 
-
+    console.log(response);
     
 
-    return res.status(200).json(
-        {profile:profile,
-        scoring:{
-            creditScore:creditScore,
-            unPaymentProbability:quantitativeValues.unPaymentProbability,
-            statusUpdateTIme:profile.StatusUpdateTime
-        },
-        creditInProgress:{
-            loans:{
-                loansQuantity: quantitativeValues.loansQuantity,
-                loanStatusCount:quantitativeValues.loanStatusCount,
-
-            },
-            payments:quantitativeValues.payments,
-            currentLoans:quantitativeValues.currentLoans
-        },
-            nextCredit:quantitativeValues.nextCredit
-        });
+    return res.status(200).json(response);
 }
 
 const updateCreditScore = async (profileId,creditScore)=>{
