@@ -1,7 +1,7 @@
 const axios = require('axios');
 const { MongoClient } = require('mongodb');
-const qualitativeScoringModule = require('../creditscoring/qualitativeScoring.js');
-const quantitativeScoringModule = require('../creditscoring/quantitativeScoring');
+const qualitativeScoringModule = require('../creditscoring/qualitativeScoring');
+const quantitativeScoringModule = require('../creditscoring/quantitativeValues');
 
 const login = async (req,res)=>{
 
@@ -109,7 +109,7 @@ const getClientDetail = async (req,res)=>{
 
     const profile = await findClientOnDataBase(profileId);
 
-    
+    console.log(profile)
     
 
     if(auth_token==="" && access_token===""){
@@ -138,36 +138,66 @@ const getClientDetail = async (req,res)=>{
 
     const qualitativeScore= await qualitativeScoringModule.calculateQualitativeScoring(profile);
 
-    const quantitativeScore =  await quantitativeScoringModule.calculateQuantitativeScoring(access_token,auth_token);
+    const quantitativeValues =  await quantitativeScoringModule.calculateQuantitativeValues(access_token,auth_token);
 
-    const creditScoring = qualitativeScore + quantitativeScore;
+    const creditScore = qualitativeScore + quantitativeValues.points;
     
-    
+    /*
 
-    profile.CreditScoring = creditScoring;
+    profile.CreditValues = {
+        points:creditScore,
+        dateGenerated:Date.now(),
+        unPaymentProbability:quantitativeValues.unPaymentProbability,
+        payments:quantitativeValues.payments,
+        loansQuantity: quantitativeValues.loansQuantity,
+        loanStatusCount:quantitativeValues.loanStatusCount,
+        currentLoans: quantitativeValues.currentLoans,
+        nextCredit:quantitativeValues.nextCredit
+
+    };
+    */
+
+    profile.CreditScore = creditScore; 
     
     delete profile.ProfileCredentials;
     delete profile.FamilyName;
     delete profile.MarriedName;
     delete profile.Title;
     delete profile.SupplementaryData;
+    delete profile.CreditScoring;
+
+   
+    
+
+    await updateCreditScore(profileId,creditScore);
+
+
 
     
 
-    await updateCreditScoring(profileId,creditScoring);
+    return res.status(200).json(
+        {profile:profile,
+        scoring:{
+            creditScore:creditScore,
+            unPaymentProbability:quantitativeValues.unPaymentProbability,
+            statusUpdateTIme:profile.StatusUpdateTime
+        },
+        creditInProgress:{
+            loans:{
+                loansQuantity: quantitativeValues.loansQuantity,
+                loanStatusCount:quantitativeValues.loanStatusCount,
 
-
-
-    
-
-    return res.status(200).json({profile:profile});
+            },
+            payments:quantitativeValues.payments,
+            currentLoans:quantitativeValues.currentLoans
+        },
+            nextCredit:quantitativeValues.nextCredit
+        });
 }
 
-const updateCreditScoring = async (profileId,creditScoring)=>{
+const updateCreditScore = async (profileId,creditScore)=>{
 
-    console.log(profileId);
-    console.log(creditScoring);
-
+    
     const client = await new MongoClient(process.env.MONGODB_SERVER);
     const dbName = process.env.DATABASE_NAME;
     
@@ -181,7 +211,7 @@ const updateCreditScoring = async (profileId,creditScoring)=>{
         const clientesCollection = await db.collection("clientes");
         
         
-        await clientesCollection.updateOne({Codigo:profileId}, {$set: {"CreditScoring": creditScoring}});
+        await clientesCollection.updateOne({Codigo:profileId}, {$set: {"CreditScore": creditScore}});
 
         console.log("Client's credit score updated");
 
@@ -216,6 +246,8 @@ const findClientOnDataBase= async (profileId)=>{
 
   
 }
+
+
 
 
 

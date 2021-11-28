@@ -2,7 +2,6 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 const dotenv = require('dotenv');
-const creditscoring = require('./controllers/creditscoring/creditscoring');
 const cliente = require('./controllers/cliente/cliente');
 const database = require('./database/database');
 const empleado = require('./controllers/empleado/empleado');
@@ -21,10 +20,9 @@ database.testDatabase();
 
 
 
-app.post('/detalle_cliente', async (req, res) => {
-   
-  return  await cliente.getClientDetail(req,res);
 
+app.post('/detalle_cliente', async (req, res) => {
+  return  await cliente.getClientDetail(req,res);
 });
 
 app.post('/empleado_login',async (req,res)=>{
@@ -32,11 +30,12 @@ app.post('/empleado_login',async (req,res)=>{
 });
 
 app.post('/cliente_login', async (req, res) => {
-
-
- return cliente.login(req, res);
-    
+ return cliente.login(req, res); 
 });
+
+app.get('/reportes',async(req,res)=>{
+  
+})
 
 
 app.listen(process.env.PORT || 3001, () => {
