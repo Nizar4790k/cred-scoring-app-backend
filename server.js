@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const cliente = require('./controllers/cliente/cliente');
 const database = require('./database/database');
 const empleado = require('./controllers/empleado/empleado');
+const reporte = require('./controllers/reporte/reporte');
 
 
 dotenv.config()
@@ -33,7 +34,9 @@ app.post('/cliente_login', async (req, res) => {
  return cliente.login(req, res); 
 });
 
-
+app.get('/reporte', async (req, res) => {
+  return await reporte.getReports(res)
+ });
 
 
 app.listen(process.env.PORT || 3001, () => {
