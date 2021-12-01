@@ -36,7 +36,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
 
                  
                 savings.totalPoints += getSavingAccountPoints(amount,accountTransactions);
-             nextCredit +=amount;
+                nextCredit +=amount;
                 savings.counter++;
 
                 break;
@@ -44,7 +44,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
             case "CurrentAccount":
             
                 current.totalPoints += getCurrentAccountPoints(amount,accountTransactions);
-             nextCredit +=amount;
+                nextCredit +=amount;
                 current.counter++;
                 
                 break;
@@ -54,7 +54,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                 const status = options.split("-")[2];
                 const paymentsQuatity = options.split("-")[1];
                 
-                loan.currentLoans.totalMount+=amount;
+                
 
                 switch(status){
                     case"completo":
@@ -88,8 +88,9 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
             case "Investments":
 
                 invesment.totalPoints +=getInvesmentAccountsPoints(amount)
-             nextCredit +=amount;
+                nextCredit +=amount;
                 invesment.counter++;
+        
 
                 break;
 
@@ -128,8 +129,6 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
         currentLoans:loan.currentLoans,
         nextCredit:nextCredit
     };
-
-
 
 
 }
