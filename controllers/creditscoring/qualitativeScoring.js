@@ -1,7 +1,7 @@
 
 const calculateQualitativeScoring= (profile)=>{
 
-    let qualitativeScoring=166.66; // Gender and LegalEntityType are equals to 83.33
+    let qualitativeScoring=166.66; // Gender and LegalEntityType are equals to 83.33 each one.
     
     let age = getAge(profile.DateOfBirth);
     
