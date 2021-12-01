@@ -35,7 +35,7 @@ app.post('/cliente_login', async (req, res) => {
 });
 
 app.get('/reporte', async (req, res) => {
-  return await reporte.getReports(res)
+  return await reporte.queryReports(res)
  });
 
 
