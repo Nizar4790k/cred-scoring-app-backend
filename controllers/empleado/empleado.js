@@ -34,17 +34,11 @@ const checkEmployee = async (username,password)=>{
     
         const numberOfReports= await db.collection("reportes").countDocuments({$and:[{anio:report.getCurrentYear()},{mes:report.getCurrentMonth()}]})
         
-        console.log(numberOfReports);
-        console.log(day)
        
         if(day === 1 && numberOfReports<1)
             await report.saveReport();
         
-        
-        
-            
-
-        
+      
 
         if(employees[0]){
             return true;
