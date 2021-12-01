@@ -1,5 +1,5 @@
 const { MongoClient } = require('mongodb');
-const reporte = require("../reporte/reporte");
+const report = require("../report/report");
 
 const login = async (req,res)=>{
 
@@ -25,20 +25,28 @@ const checkEmployee = async (username,password)=>{
         await client.connect();
         const db = client.db(dbName);
         
-        const empleadosCollection = await db.collection("empleados")
-    
-        const empleados = await empleadosCollection.find({username:username,password:password}).toArray()
+        const employeeCollection = await db.collection("empleados")
+        
+
+        const employees = await employeeCollection.find({username:username,password:password}).toArray()
         const today = new Date();
-        const dia = today.getDate();
+        const day = today.getDate();
+    
+        const numberOfReports= await db.collection("reportes").countDocuments({$and:[{anio:report.getCurrentYear()},{mes:report.getCurrentMonth()}]})
+        
+        console.log(numberOfReports);
+        console.log(day)
+       
+        if(day === 1 && numberOfReports<1)
+            await report.saveReport();
         
         
-        if(dia == 1)
-           reporte.setReportes();
+        
             
 
         
 
-        if(empleados[0]){
+        if(employees[0]){
             return true;
         }else{
             return false;
@@ -52,11 +60,6 @@ const checkEmployee = async (username,password)=>{
 
     
 }
-
-
-
-
-
 
 module.exports = {
     login:login,
