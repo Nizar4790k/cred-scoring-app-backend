@@ -1,9 +1,6 @@
 const axios = require('axios');
 
 
-
-
-
 const calculateQuantitativeValues = async (access_token, auth_token) => {
 
     const accounts = await getClientAccounts(access_token, auth_token);
@@ -273,14 +270,13 @@ const getInvesmentAccountsPoints = (amount)=>{
         points = basePoints * 0.50;
     } else if (amount > 500000 && amount <= 1000000) {
         points = basePoints * 0.65;
-    } else if (amount > 1000000 && amount <= 300000) {
+    } else if (amount > 1000000 && amount <= 300000) { 
         points = basePoints * 0.85;
     } else {
         points = basePoints;
     }
 
     return points;
-
 }
 
 const getAccountsTransaction = async (accountId, access_token, auth_token) => {
@@ -354,5 +350,12 @@ const getBadPayments= (accountTransactions)=>{
 
 
 module.exports = {
-    calculateQuantitativeValues: calculateQuantitativeValues
+    calculateQuantitativeValues: calculateQuantitativeValues,
+    getSavingAccountPoints:getSavingAccountPoints,
+    getInvesmentAccountsPoints,getInvesmentAccountsPoints,
+    getDebitCreditRatio:getDebitCreditRatio,
+    getBadPayments:getBadPayments,
+    getGoodPayments:getGoodPayments,
+    getBadPayments:getBadPayments
+
 }

@@ -14,7 +14,7 @@ const calculateQualitativeScoring= (profile)=>{
     qualitativeScoring +=getNationalityPoints(profile.Nationality);
     
   
-    qualitativeScoring +=getProfessionName(profile.WorkDetails[0].ProfessionName);
+    qualitativeScoring +=getProfessionPoints(profile.WorkDetails[0].ProfessionName);
     
   
     return qualitativeScoring;
@@ -77,7 +77,6 @@ const calculateQualitativeScoring= (profile)=>{
           return 15;
     }
   
-    
   
   }
   
@@ -91,7 +90,7 @@ const calculateQualitativeScoring= (profile)=>{
   
   }
   
-  const getProfessionName = (profesionName)=>{
+  const getProfessionPoints = (profesionName)=>{
   
     switch(profesionName){
       case "Contador":
@@ -125,6 +124,11 @@ const calculateQualitativeScoring= (profile)=>{
 
 
 module.exports = {
-  calculateQualitativeScoring:calculateQualitativeScoring
+  calculateQualitativeScoring:calculateQualitativeScoring,
+  getAgePoints:getAgePoints,
+  getMaritalStatusPoints:getMaritalStatusPoints,
+  getNationalityPoints:getNationalityPoints,
+  getProfessionPoints:getProfessionPoints,
+  getAge:getAge
   
 };
