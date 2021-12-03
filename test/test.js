@@ -133,8 +133,22 @@ describe("CredScoringAppTest", () => {
 
       })
 
+      it("Esta retornando 56.875 cuando se tiene un prestamo de 750000 DOP y con un pago correcto e incorrecto ",()=>{
+        
+        
+        accountTransactions = 
+        [ 
+          {TransactionInformation:"Correcto"},
+          {TransactionInformation:"Incorrecto"}
+        ];
+
+        assert(56.875,quantitativeValues.getLoansAccountPoints(750000,accountTransactions,2));
+  
+      
+      });
+
      
-    });
+});
 
     
 

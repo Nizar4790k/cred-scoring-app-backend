@@ -357,6 +357,7 @@ module.exports = {
     getDebitCreditRatio:getDebitCreditRatio,
     getBadPayments:getBadPayments,
     getGoodPayments:getGoodPayments,
-    getBadPayments:getBadPayments
+    getBadPayments:getBadPayments,
+    getLoansAccountPoints:getLoansAccountPoints
 
 }
