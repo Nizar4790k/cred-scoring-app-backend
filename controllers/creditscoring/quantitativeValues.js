@@ -12,7 +12,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
     const loan = { counter: 0, totalPoints: 0 ,
         payments:{goodPayments:0,badPayments:0},
         statusCount:{completed:0,inProgress:0},
-        currentLoans:{totalAmount:0,totalPayments:0,payments:{goodPayments:0,badPayments:0}}
+        currentLoans:{totalAmount:0,totalCurrentAmount:0,totalPayments:0,payments:{goodPayments:0,badPayments:0}}
     };
 
     
@@ -58,26 +58,27 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                     loan.statusCount.completed++;
                     break;
                     case "actual":
-                    
+
+                    loan.currentLoans.totalAmount += options.split("-")[3] *58
                     loan.statusCount.inProgress++;
-                    loan.currentLoans.totalAmount +=amount; 
+                    loan.currentLoans.totalCurrentAmount +=amount; 
                     loan.currentLoans.payments.goodPayments+=getGoodPayments(accountTransactions);
                     loan.currentLoans.payments.badPayments+=getBadPayments(accountTransactions);
-                    loan.currentLoans.totalPayments+=paymentsQuatity;
+                    loan.currentLoans.totalPayments+= parseInt(paymentsQuatity);
                     break;
 
                 }
 
                 const service = options.split("-")[0];
 
-
+                
                 amount = options.split("-")[3] *58
                 loan.totalPoints += getLoansAccountPoints(amount, accountTransactions, paymentsQuatity);
                 
-                loan.payments.goodPayments = getGoodPayments(accountTransactions);
+                loan.payments.goodPayments += getGoodPayments(accountTransactions);
             
 
-                loan.payments.badPayments = getBadPayments(accountTransactions);
+                loan.payments.badPayments += getBadPayments(accountTransactions);
 
                 loan.counter++;
                  break;
@@ -270,7 +271,7 @@ const getInvesmentAccountsPoints = (amount)=>{
         points = basePoints * 0.50;
     } else if (amount > 500000 && amount <= 1000000) {
         points = basePoints * 0.65;
-    } else if (amount > 1000000 && amount <= 300000) { 
+    } else if (amount > 1000000 && amount <= 3000000) {
         points = basePoints * 0.85;
     } else {
         points = basePoints;
