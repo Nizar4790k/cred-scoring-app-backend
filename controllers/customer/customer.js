@@ -76,7 +76,7 @@ const getAcessToken = async () => {
 
     const body = "grant_type=client_credentials";
 
-    const response = await axios.post("https://api.uat.4wrd.tech:8243/token", body, { headers });
+    const response = await axios.post(`${process.env.FIHOGAR_ENVIRONMENT}/token`, body, { headers });
 
 
     const access_token = await response.data.access_token;
@@ -93,7 +93,7 @@ const getAuthorizationToken = async (username, password, access_token) => {
 
     const body = `grant_type=password&username=${username}&password=${password}`
 
-    const response = await axios.post("https://api.uat.4wrd.tech:8243/authorize/2.0/token?provider=AB4WRD", body, { headers });
+    const response = await axios.post(`${process.env.FIHOGAR_ENVIRONMENT}/authorize/2.0/token?provider=${process.env.FIHOGAR_PROVIDER}`, body, { headers });
 
 
 
@@ -181,7 +181,7 @@ const getCustomerDetails = async (req, res) => {
 
 const updateCreditScore = async (profileId, creditScore) => {
 
-
+    
     const client = await new MongoClient(process.env.MONGODB_SERVER);
     const dbName = process.env.DATABASE_NAME;
 
