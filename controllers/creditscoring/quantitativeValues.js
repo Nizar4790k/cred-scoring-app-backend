@@ -27,7 +27,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
 
         const accountId = accounts[i].Account[0].Identification;
 
-        let amount = accounts[i].Balance[0].Amount.Amount * 58;
+        let amount = accounts[i].Balance[0].Amount.Amount * Number(process.env.DOLLAR_EXCHANGE_RATE);
         const accountTransactions = await getAccountsTransaction(accountId, access_token, auth_token);
         const accountType =accounts[i].AccountSubType;
 
@@ -62,7 +62,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                     break;
                     case "actual":
 
-                    loan.currentLoans.totalAmount += options.split("-")[3] *58
+                    loan.currentLoans.totalAmount += options.split("-")[3] *Number(process.env.DOLLAR_EXCHANGE_RATE);
                     loan.statusCount.inProgress++;
                     loan.currentLoans.totalCurrentAmount +=amount; 
                     loan.currentLoans.payments.goodPayments+=getGoodPayments(accountTransactions);
@@ -75,7 +75,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                 const service = options.split("-")[0];
 
                 
-                amount = options.split("-")[3] *58
+                amount = options.split("-")[3] * Number(process.env.DOLLAR_EXCHANGE_RATE);
                 loan.totalPoints += getLoansAccountPoints(amount, accountTransactions, paymentsQuatity);
                 
                 loan.payments.goodPayments += getGoodPayments(accountTransactions);
@@ -137,7 +137,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
 
 const getClientAccounts = async (access_token, auth_token) => {
     try {
-        const response = await axios.get("https://api.uat.4wrd.tech:8243/manage-accounts/api/2.0/accounts/?provider=AB4WRD", {
+        const response = await axios.get(`${process.env.FIHOGAR_ENVIRONMENT}/manage-accounts/api/2.0/accounts/?provider=${process.env.FIHOGAR_PROVIDER}`, {
             headers: {
                 Authorization: `Bearer ${access_token}`,
                 "token-id": auth_token
@@ -286,7 +286,8 @@ const getInvesmentAccountsPoints = (amount)=>{
 
 const getAccountsTransaction = async (accountId, access_token, auth_token) => {
 
-    let accountTransactions = await axios.get(`https://api.uat.4wrd.tech:8243/manage-accounts/api/2.0/accounts/${accountId}/transactions?provider=AB4WRD`, {
+    try{
+    let accountTransactions = await axios.get(`${process.env.FIHOGAR_ENVIRONMENT}/manage-accounts/api/2.0/accounts/${accountId}/transactions?provider=${process.env.FIHOGAR_PROVIDER}`, {
         headers: {
             Authorization: `Bearer ${access_token}`,
             "token-id": auth_token
@@ -294,6 +295,10 @@ const getAccountsTransaction = async (accountId, access_token, auth_token) => {
     });
 
     return accountTransactions.data.Data.Transaction;
+    }catch(err){
+        console.log(err);
+    }
+    
 }
 
 
