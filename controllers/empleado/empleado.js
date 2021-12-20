@@ -36,7 +36,7 @@ const checkEmployee = async (username,password)=>{
         
        
         if(day === 1 && numberOfReports<1)
-            await report.saveReport();
+            report.saveReport();
         
       
 
