@@ -11,7 +11,6 @@ const login = async (req, res) => {
 
         const customerId = await checkCustomer(username, password);
 
-
         if (!customerId) {
             return res.status(404).json({ message: "Cliente no registrado" });
         }
@@ -19,22 +18,15 @@ const login = async (req, res) => {
         const access_token = await getAcessToken();
         const auth_token = await getAuthorizationToken(username, password, access_token)
 
-
         return res.status(200).json({
             auth_token: auth_token,
             access_token: access_token,
             codigoCliente: customerId
         });
 
-
-
     } catch (err) {
-        return res.status(err.response.status)
+        return res.status(404).json({ message: "Cliente no registrado" });
     }
-    finally {
-
-    }
-
 }
 
 const checkCustomer = async (username, password) => {
@@ -49,7 +41,6 @@ const checkCustomer = async (username, password) => {
         const customerCollection = await db.collection("clientes")
 
         const customers = await customerCollection.find({ ProfileCredentials: { Username: username, Password: password } }).toArray()
-
 
         if (customers[0]) {
             return customers[0].Codigo;
@@ -124,7 +115,7 @@ const getCustomerDetails = async (req, res) => {
                 auth_token = await getAuthorizationToken(profile.ProfileCredentials.Username, profile.ProfileCredentials.Password, access_token);
 
             } catch (err) {
-                return res.status(401).json({ message: "No autorizado" });
+                return res.status(404).json({ message: "Cliente no registrado" });
             }
 
 
@@ -135,48 +126,50 @@ const getCustomerDetails = async (req, res) => {
 
     }
 
+    try{
+        const qualitativeScore = await qualitativeScoringModule.calculateQualitativeScoring(profile);
+
+        const quantitativeValues = await quantitativeScoringModule.calculateQuantitativeValues(access_token, auth_token);
+
+        const creditScore = qualitativeScore + quantitativeValues.points;
 
 
-    const qualitativeScore = await qualitativeScoringModule.calculateQualitativeScoring(profile);
 
-    const quantitativeValues = await quantitativeScoringModule.calculateQuantitativeValues(access_token, auth_token);
-
-    const creditScore = qualitativeScore + quantitativeValues.points;
-
-
-
-    const response =
-    {
-        profile: profile,
-        scoring: {
-            creditScore: creditScore,
-            unPaymentProbability: quantitativeValues.unPaymentProbability,
-            dateCreated: profile.DateCreated
-        },
-        creditInProgress: {
-            loans: {
-                loansQuantity: quantitativeValues.loansQuantity,
-                loanStatusCount: quantitativeValues.loanStatusCount,
-
+        const response =
+        {
+            profile: profile,
+            scoring: {
+                creditScore: creditScore,
+                unPaymentProbability: quantitativeValues.unPaymentProbability,
+                dateCreated: profile.DateCreated
             },
-            payments: quantitativeValues.payments,
-            currentLoans: quantitativeValues.currentLoans
-        },
-        nextCredit: quantitativeValues.nextCredit
-    };
+            creditInProgress: {
+                loans: {
+                    loansQuantity: quantitativeValues.loansQuantity,
+                    loanStatusCount: quantitativeValues.loanStatusCount,
 
-    delete profile.ProfileCredentials;
-    delete profile.FamilyName;
-    delete profile.MarriedName;
-    delete profile.Title;
-    delete profile.SupplementaryData;
-    delete profile.CreditScoring;
-    delete profile.CreditScore;
-    delete profile.DateCreated;
+                },
+                payments: quantitativeValues.payments,
+                currentLoans: quantitativeValues.currentLoans
+            },
+            nextCredit: quantitativeValues.nextCredit
+        };
 
-    await updateCreditScore(profileId, creditScore);
+        delete profile.ProfileCredentials;
+        delete profile.FamilyName;
+        delete profile.MarriedName;
+        delete profile.Title;
+        delete profile.SupplementaryData;
+        delete profile.CreditScoring;
+        delete profile.CreditScore;
+        delete profile.DateCreated;
 
-    return res.status(200).json(response);
+        await updateCreditScore(profileId, creditScore);
+
+        return res.status(200).json(response);
+    }catch(err){
+        return res.status(401).json({ message: "No autorizado" });
+    }
 }
 
 const updateCreditScore = async (profileId, creditScore) => {
@@ -230,10 +223,60 @@ const findCustomerOnDataBase = async (profileId) => {
 
 }
 
+const getGoodCostumers = async () => {
+
+    const client = await new MongoClient(process.env.MONGODB_SERVER);
+    const dbName = process.env.DATABASE_NAME;
+
+    try {
+        await client.connect();
+        const db = client.db(dbName);
+
+        const costumerCollection = await db.collection("clientes")
+
+        const costumers = await costumerCollection.find().toArray();
+
+        let goodCostumers = [];
+        
+        for(var i=0;i<costumers.length;i++){
+            let qualitativeScore = await qualitativeScoringModule.calculateQualitativeScoring(costumers[i]);
+            let access_token = await getAcessToken();
+            let auth_token = await getAuthorizationToken(costumers[i].ProfileCredentials.Username,
+                costumers[i].ProfileCredentials.Password, access_token);
+            let quantitativeValues = await quantitativeScoringModule.calculateQuantitativeValues(access_token, auth_token);
+            let score = qualitativeScore + quantitativeValues.points;
+
+            if(score > 666){
+                let nombre = costumers[i].FirstName == "" ? "" : costumers[i].FirstName + " ";
+                let sNombre = costumers[i].MiddleName == "" ? "" : costumers[i].MiddleName + " ";
+                let apellidos = costumers[i].LastName;
+
+                const formatterPeso = new Intl.NumberFormat('es-DO', {
+                    style: 'currency',
+                    currency: 'DOP',
+                    minimumFractionDigits: 0
+                  })
+
+                goodCostumers.push({
+                    nombreCompleto: nombre + sNombre + apellidos,
+                    prestamoCantidad: formatterPeso.format(Number(quantitativeValues.nextCredit.toFixed(2))),
+                    puntajeCredito: Number(score.toFixed(2)),
+                    correo: costumers[i].Contacts[0].EmailAddress
+                });
+            }        
+        }
+
+        return goodCostumers;
+
+    } catch (err) {
+        console.log(err)
+    }
+}
+
 module.exports = {
     login: login,
     getAcessToken: getAcessToken,
     getAuthorizationToken: getAuthorizationToken,
-    getCustomerDetails: getCustomerDetails
-
+    getCustomerDetails: getCustomerDetails,
+    getGoodCostumers: getGoodCostumers
 };

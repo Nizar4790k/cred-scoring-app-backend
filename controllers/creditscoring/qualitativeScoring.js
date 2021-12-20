@@ -13,7 +13,7 @@ const calculateQualitativeScoring= (profile)=>{
   
     qualitativeScoring +=getNationalityPoints(profile.Nationality);
     
-  
+
     qualitativeScoring +=getProfessionName(profile.WorkDetails[0].ProfessionName);
     
   

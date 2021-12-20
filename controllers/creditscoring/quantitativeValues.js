@@ -1,5 +1,5 @@
 const axios = require('axios');
-
+const datos = require("../datos/datos");
 
 
 
@@ -7,6 +7,7 @@ const axios = require('axios');
 const calculateQuantitativeValues = async (access_token, auth_token) => {
 
     const accounts = await getClientAccounts(access_token, auth_token);
+    const dollarRate = await datos.setDollarRate();
     
     const savings = { counter: 0,totalPoints: 0 };
     const current = { counter: 0,  totalPoints: 0 };
@@ -27,7 +28,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
 
         const accountId = accounts[i].Account[0].Identification;
 
-        let amount = accounts[i].Balance[0].Amount.Amount * 58;
+        let amount = accounts[i].Balance[0].Amount.Amount * dollarRate;
         const accountTransactions = await getAccountsTransaction(accountId, access_token, auth_token);
         const accountType =accounts[i].AccountSubType;
 
@@ -62,7 +63,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                     break;
                     case "actual":
 
-                    loan.currentLoans.totalAmount += options.split("-")[3] *58
+                    loan.currentLoans.totalAmount += options.split("-")[3] *dollarRate
                     loan.statusCount.inProgress++;
                     loan.currentLoans.totalCurrentAmount +=amount; 
                     loan.currentLoans.payments.goodPayments+=getGoodPayments(accountTransactions);
@@ -75,7 +76,7 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                 const service = options.split("-")[0];
 
                 
-                amount = options.split("-")[3] *58
+                amount = options.split("-")[3] *dollarRate
                 loan.totalPoints += getLoansAccountPoints(amount, accountTransactions, paymentsQuatity);
                 
                 loan.payments.goodPayments += getGoodPayments(accountTransactions);

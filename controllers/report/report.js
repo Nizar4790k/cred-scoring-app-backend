@@ -1,4 +1,5 @@
 const { MongoClient } = require('mongodb');
+const datos = require("../datos/datos");
 
 const queryReports = async (res)=>{
 
@@ -106,8 +107,8 @@ const saveReport = async () => {
         
         const customerCollection = await db.collection("clientes");
         
-        const month = getCurrentMonth();
-        const year = getCurrentYear();
+        const month = datos.getCurrentMonth();
+        const year = datos.getCurrentYear();
         const customerQuantity = await getCustomerQuantity(customerCollection);
         const averageScore = await getAverageScore(customerCollection);
         const customerQuantityByLevel = await getCustomerQuantityByLevel(customerCollection);
@@ -131,25 +132,6 @@ const saveReport = async () => {
     }finally{
         client.close();
     }
-}
-
-const getCurrentMonth = () => {
-    const today = new Date();
-    const monthNumber = today.getMonth() == 0 ? 12 : today.getMonth();
-    
-    const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio",
-                    "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-    
-    const month = months[monthNumber - 1];
-
-    return month;
-}
-
-const getCurrentYear = () => {
-    const today = new Date();
-    const year = today.getMonth() == 0 ? today.getFullYear() - 1 : today.getFullYear();
-
-    return year;
 }
 
 const getCustomerQuantity = async (customerCollection) => {
@@ -222,6 +204,4 @@ const getTop3Customers = async (customerCollection) => {
 module.exports = {
     queryReports:queryReports,
     saveReport:saveReport,
-    getCurrentMonth:getCurrentMonth,
-    getCurrentYear:getCurrentYear
 }

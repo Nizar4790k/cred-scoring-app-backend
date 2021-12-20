@@ -1,5 +1,7 @@
 const { MongoClient } = require('mongodb');
 const report = require("../report/report");
+const datos = require("../datos/datos");
+const email = require("../email/email");
 
 const login = async (req,res)=>{
 
@@ -31,14 +33,16 @@ const checkEmployee = async (username,password)=>{
         const employees = await employeeCollection.find({username:username,password:password}).toArray()
         const today = new Date();
         const day = today.getDate();
-    
-        const numberOfReports= await db.collection("reportes").countDocuments({$and:[{anio:report.getCurrentYear()},{mes:report.getCurrentMonth()}]})
-        
+        const currentDate = datos.normalDate();
+        const numberOfReports= await db.collection("reportes").countDocuments({$and:[{anio:datos.getCurrentYear()},{mes:datos.getCurrentMonth()}]})
+        const numberOfEmils= await db.collection("correos").countDocuments({$and:[{dia:currentDate.day},{mes:currentDate.month},{anio:currentDate.year}]})
        
-        if(day === 1 && numberOfReports<1)
-            await report.saveReport();
-        
-      
+        if(day === 1){
+            if(numberOfReports<1)
+                report.saveReport();
+            if(numberOfEmils<1)
+                email.emails();
+        }
 
         if(employees[0]){
             return true;
