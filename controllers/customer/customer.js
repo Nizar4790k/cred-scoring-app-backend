@@ -26,13 +26,8 @@ const login = async (req, res) => {
             codigoCliente: customerId
         });
 
-
-
     } catch (err) {
-        return res.status(err.response.status)
-    }
-    finally {
-
+        return res.status(404).json({message:"Cliente no registrado"});
     }
 
 }
@@ -76,7 +71,7 @@ const getAcessToken = async () => {
 
     const body = "grant_type=client_credentials";
 
-    const response = await axios.post(`${process.env.FIHOGAR_ENVIRONMENT}/token`, body, { headers });
+    const response = await axios.post("https://api.uat.4wrd.tech:8243/token", body, { headers });
 
 
     const access_token = await response.data.access_token;
@@ -93,7 +88,7 @@ const getAuthorizationToken = async (username, password, access_token) => {
 
     const body = `grant_type=password&username=${username}&password=${password}`
 
-    const response = await axios.post(`${process.env.FIHOGAR_ENVIRONMENT}/authorize/2.0/token?provider=${process.env.FIHOGAR_PROVIDER}`, body, { headers });
+    const response = await axios.post("https://api.uat.4wrd.tech:8243/authorize/2.0/token?provider=AB4WRD", body, { headers });
 
 
 
@@ -124,64 +119,65 @@ const getCustomerDetails = async (req, res) => {
                 auth_token = await getAuthorizationToken(profile.ProfileCredentials.Username, profile.ProfileCredentials.Password, access_token);
 
             } catch (err) {
-                return res.status(401).json({ message: "No autorizado" });
+                return res.status(404).json({ message: "Cliente no registrado" });
             }
 
 
         } else {
-
             return res.status(404).json({ message: "Cliente no registrado" });
         }
 
     }
 
+    try{
+        const qualitativeScore = await qualitativeScoringModule.calculateQualitativeScoring(profile);
+
+        const quantitativeValues = await quantitativeScoringModule.calculateQuantitativeValues(access_token, auth_token);
+
+        const creditScore = qualitativeScore + quantitativeValues.points;
 
 
-    const qualitativeScore = await qualitativeScoringModule.calculateQualitativeScoring(profile);
 
-    const quantitativeValues = await quantitativeScoringModule.calculateQuantitativeValues(access_token, auth_token);
-
-    const creditScore = qualitativeScore + quantitativeValues.points;
-
-
-
-    const response =
-    {
-        profile: profile,
-        scoring: {
-            creditScore: creditScore,
-            unPaymentProbability: quantitativeValues.unPaymentProbability,
-            dateCreated: profile.DateCreated
-        },
-        creditInProgress: {
-            loans: {
-                loansQuantity: quantitativeValues.loansQuantity,
-                loanStatusCount: quantitativeValues.loanStatusCount,
-
+        const response =
+        {
+            profile: profile,
+            scoring: {
+                creditScore: creditScore,
+                unPaymentProbability: quantitativeValues.unPaymentProbability,
+                dateCreated: profile.DateCreated
             },
-            payments: quantitativeValues.payments,
-            currentLoans: quantitativeValues.currentLoans
-        },
-        nextCredit: quantitativeValues.nextCredit
-    };
+            creditInProgress: {
+                loans: {
+                    loansQuantity: quantitativeValues.loansQuantity,
+                    loanStatusCount: quantitativeValues.loanStatusCount,
 
-    delete profile.ProfileCredentials;
-    delete profile.FamilyName;
-    delete profile.MarriedName;
-    delete profile.Title;
-    delete profile.SupplementaryData;
-    delete profile.CreditScoring;
-    delete profile.CreditScore;
-    delete profile.DateCreated;
+                },
+                payments: quantitativeValues.payments,
+                currentLoans: quantitativeValues.currentLoans
+            },
+            nextCredit: quantitativeValues.nextCredit
+        };
 
-    await updateCreditScore(profileId, creditScore);
+        delete profile.ProfileCredentials;
+        delete profile.FamilyName;
+        delete profile.MarriedName;
+        delete profile.Title;
+        delete profile.SupplementaryData;
+        delete profile.CreditScoring;
+        delete profile.CreditScore;
+        delete profile.DateCreated;
 
-    return res.status(200).json(response);
+        await updateCreditScore(profileId, creditScore);
+
+        return res.status(200).json(response);
+    }catch(err){
+        return res.status(401).json({ message: "No autorizado" });
+    }
 }
 
 const updateCreditScore = async (profileId, creditScore) => {
 
-    
+
     const client = await new MongoClient(process.env.MONGODB_SERVER);
     const dbName = process.env.DATABASE_NAME;
 
