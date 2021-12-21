@@ -2,6 +2,7 @@ const { MongoClient } = require('mongodb');
 
 const queryReports = async (res)=>{
 
+  try{
     const reportes = await getReports();
     
 
@@ -11,6 +12,9 @@ const queryReports = async (res)=>{
 
     return res.status(200).json({reportes});
 
+  }catch(err){
+    return res.status(500).json({message:"Error en el servidor"});
+  }
 
 }
 
