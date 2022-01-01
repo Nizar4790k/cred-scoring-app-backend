@@ -32,8 +32,9 @@ const getReports = async ()=>{
         const today = new Date();
         const year = today.getFullYear();
 
-        const reports = await reportCollections.find({anio:year}).toArray();
+        const reports = await reportCollections.find({$or:[{anio:year},{anio:year-1}]}).toArray();
         
+
         const months = pushMonths(reports);
         const customerQuantity = pushCustomerQuantity(reports);
         const averageScore = pushAverageScore(reports);
