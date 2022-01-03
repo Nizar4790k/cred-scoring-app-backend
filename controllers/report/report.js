@@ -35,14 +35,14 @@ const getReports = async ()=>{
         const reports = await reportCollections.find({$or:[{anio:year},{anio:year-1}]}).toArray();
         
 
-        const months = pushMonths(reports);
+        const monthsYear = pushMonthsYear(reports);
         const customerQuantity = pushCustomerQuantity(reports);
         const averageScore = pushAverageScore(reports);
         const currentLevel = pushCurrentLevel(reports); // This method measures the customers with good, regular and bad,
         const currentTop3 = pushCurrentTop3Customers(reports);
 
         return {
-            meses: months,
+            meses: monthsYear,
             cantidadClientes: customerQuantity,
             averageScores: averageScore,
             currentLevel: currentLevel,
@@ -53,19 +53,17 @@ const getReports = async ()=>{
         console.log(err)
     }finally{
         client.close();
-    }
-
-    
+    }    
 }
 
-const pushMonths = (reports) => {
-    let month = [];
+const pushMonthsYear = (reports) => {
+    let monthsYear = [];
     
     reports.forEach(reporte => {
-        month.push(reporte.mes)
+        monthsYear.push(reporte.mes + "-" + reporte.anio)
     });
 
-    return month;
+    return monthsYear;
 }
 
 const pushCustomerQuantity = (reports) => {
@@ -214,7 +212,7 @@ const getTop3Customers = async (customerCollection) => {
 
     clientes.forEach(cliente => {
         let secondName = cliente.MiddleName == "" ? "" : " " + cliente.MiddleName;
-        resultado.push({nombre:cliente.FirstName + secondName + " " + cliente.LastName,scores:cliente.CreditScore});
+        resultado.push({nombre:cliente.FirstName + secondName + " " + cliente.LastName,score:cliente.CreditScore});
     })
 
     
