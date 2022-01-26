@@ -63,38 +63,50 @@ const checkCustomer = async (username, password) => {
 
 const getAcessToken = async () => {
 
-    var headers = {
-        Authorization: process.env.TOKEN_BEARER,
-        "Content-Type": "application/x-www-form-urlencoded"
+    try {
+
+        var headers = {
+            Authorization: process.env.TOKEN_BEARER,
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+    
+    
+        const body = "grant_type=client_credentials";
+    
+        const response = await axios.post("https://api.uat.4wrd.tech:8243/token", body, { headers });
+    
+    
+        const access_token = await response.data.access_token;
+    
+        return access_token;
+
+    } catch (error) {
+        console.log(error);
     }
-
-
-    const body = "grant_type=client_credentials";
-
-    const response = await axios.post("https://api.uat.4wrd.tech:8243/token", body, { headers });
-
-
-    const access_token = await response.data.access_token;
-
-    return access_token;
 
 }
 
 const getAuthorizationToken = async (username, password, access_token) => {
 
-    const headers = {
-        Authorization: `Bearer ${access_token}`
+    try {
+
+        const headers = {
+            Authorization: `Bearer ${access_token}`
+        }
+    
+        const body = `grant_type=password&username=${username}&password=${password}`
+    
+        const response = await axios.post("https://api.uat.4wrd.tech:8243/authorize/2.0/token?provider=AB4WRD", body, { headers });
+    
+    
+    
+        const auth_token = await response.data.access_token;
+    
+        return auth_token;
+
+    } catch (error) {
+        console.log(error)
     }
-
-    const body = `grant_type=password&username=${username}&password=${password}`
-
-    const response = await axios.post("https://api.uat.4wrd.tech:8243/authorize/2.0/token?provider=AB4WRD", body, { headers });
-
-
-
-    const auth_token = await response.data.access_token;
-
-    return auth_token;
 
 }
 
@@ -171,7 +183,7 @@ const getCustomerDetails = async (req, res) => {
 
         return res.status(200).json(response);
     }catch(err){
-        return res.status(401).json({ message: "No autorizado" });
+        return res.status(err.response.status).json()
     }
 }
 
