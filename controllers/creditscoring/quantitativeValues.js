@@ -1,9 +1,5 @@
 const axios = require('axios');
 
-
-
-
-
 const calculateQuantitativeValues = async (access_token, auth_token) => {
 
     const accounts = await getClientAccounts(access_token, auth_token);
@@ -17,7 +13,6 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
         statusCount:{completed:0,inProgress:0},
         currentLoans:{totalAmount:0,totalCurrentAmount:0,totalPayments:0,payments:{goodPayments:0,badPayments:0}}
     };
-
     
     var nextCredit=0
 
@@ -33,7 +28,6 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
 
         switch (accountType) {
             case "Savings":
-
                  
                 savings.totalPoints += getSavingAccountPoints(amount,accountTransactions);
                 nextCredit +=amount;
@@ -53,28 +47,26 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                 const options = accounts[i].Nickname; // In this line, we get the loan details.
                 const status = options.split("-")[2];
                 const paymentsQuatity = options.split("-")[1];
-                
-                
 
                 switch(status){
                     case"completo":
                     loan.statusCount.completed++;
                     break;
-                    case "actual":
 
+                    case "actual":
                     loan.currentLoans.totalAmount += options.split("-")[3] *Number(process.env.DOLLAR_EXCHANGE_RATE);
                     loan.statusCount.inProgress++;
                     loan.currentLoans.totalCurrentAmount +=amount; 
                     loan.currentLoans.payments.goodPayments+=getGoodPayments(accountTransactions);
                     loan.currentLoans.payments.badPayments+=getBadPayments(accountTransactions);
                     loan.currentLoans.totalPayments+= parseInt(paymentsQuatity);
+                    
                     break;
 
                 }
 
                 const service = options.split("-")[0];
-
-                
+         
                 amount = options.split("-")[3] * Number(process.env.DOLLAR_EXCHANGE_RATE);
                 loan.totalPoints += getLoansAccountPoints(amount, accountTransactions, paymentsQuatity);
                 
@@ -84,7 +76,8 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                 loan.payments.badPayments += getBadPayments(accountTransactions);
 
                 loan.counter++;
-                 break;
+
+                break;
 
             case "Investments":
 
@@ -92,14 +85,11 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
                 nextCredit +=amount;
                 invesment.counter++;
         
-
                 break;
 
             default:
                 break;
         }
-
-
     } 
 
     if(savings.totalPoints!=0){
@@ -130,13 +120,11 @@ const calculateQuantitativeValues = async (access_token, auth_token) => {
         currentLoans:loan.currentLoans,
         nextCredit:nextCredit
     };
-
-
 }
-
 
 const getClientAccounts = async (access_token, auth_token) => {
     try {
+
         const response = await axios.get(`${process.env.FIHOGAR_ENVIRONMENT}/manage-accounts/api/2.0/accounts/?provider=${process.env.FIHOGAR_PROVIDER}`, {
             headers: {
                 Authorization: `Bearer ${access_token}`,
@@ -144,11 +132,10 @@ const getClientAccounts = async (access_token, auth_token) => {
             }
         });
         return response.data.Data.Account;
+
     } catch (err) {
-
-        console.log(err);
+        throw err
     }
-
 }
 
 const getSavingAccountPoints = (amount,accountTransactions)=>{
@@ -172,8 +159,6 @@ const getSavingAccountPoints = (amount,accountTransactions)=>{
 
         let debitCreditRatio = getDebitCreditRatio(accountTransactions);
 
-
-
         if (debitCreditRatio <= 0.75) {
             points = points;
         } else if (debitCreditRatio > 0.75 && debitCreditRatio <= 1) {
@@ -183,10 +168,7 @@ const getSavingAccountPoints = (amount,accountTransactions)=>{
         } else if (debitCreditRatio === "Infinity") {
             points = points * (1 - 0.75);
         }
-           
-
     }
-
 
     return points;
 }
@@ -220,17 +202,14 @@ const getCurrentAccountPoints= (amount,accountTransactions) =>{
         } else if (debitCreditRatio === "Infinity") {
             points = points * (1 - 0.75);
         }
-
     }
 
     return points;
-
 }
 
 const getLoansAccountPoints = (amount,accountTransactions,paymentsQuatity)=>{
     const basePoints = 175;
     let points = 0;
-    
 
     if (amount <= 100000) {
         points = basePoints * 0.35;
@@ -247,8 +226,8 @@ const getLoansAccountPoints = (amount,accountTransactions,paymentsQuatity)=>{
     if (accountTransactions.length === 0) {
         points = points;
 
-    } else 
-    {
+    } 
+    else{
         const percentToRemove = (100 / paymentsQuatity) / 100
         
         accountTransactions.forEach(transaction => {
@@ -260,7 +239,6 @@ const getLoansAccountPoints = (amount,accountTransactions,paymentsQuatity)=>{
         });
     }
 
-    
     return points;
 }
 
@@ -281,27 +259,25 @@ const getInvesmentAccountsPoints = (amount)=>{
     }
 
     return points;
-
 }
 
 const getAccountsTransaction = async (accountId, access_token, auth_token) => {
 
     try{
-    let accountTransactions = await axios.get(`${process.env.FIHOGAR_ENVIRONMENT}/manage-accounts/api/2.0/accounts/${accountId}/transactions?provider=${process.env.FIHOGAR_PROVIDER}`, {
-        headers: {
-            Authorization: `Bearer ${access_token}`,
-            "token-id": auth_token
-        }
-    });
 
-    return accountTransactions.data.Data.Transaction;
+        let accountTransactions = await axios.get(`${process.env.FIHOGAR_ENVIRONMENT}/manage-accounts/api/2.0/accounts/${accountId}/transactions?provider=${process.env.FIHOGAR_PROVIDER}`, {
+            headers: {
+                Authorization: `Bearer ${access_token}`,
+                "token-id": auth_token
+            }
+        });
+
+        return accountTransactions.data.Data.Transaction;
+
     }catch(err){
-        console.log(err);
+        throw err
     }
-    
 }
-
-
 
 const getDebitCreditRatio = (accountTransactions) => {
     let totalCredit = 0;
@@ -314,16 +290,12 @@ const getDebitCreditRatio = (accountTransactions) => {
         } else {
             totalDebit += transaction.Amount.Amount
         }
-
-
     });
 
     let debitCreditRatio = totalDebit / totalCredit;
 
     return debitCreditRatio;
 }
-
-
 
 const getGoodPayments= (accountTransactions)=>{
     
@@ -334,12 +306,9 @@ const getGoodPayments= (accountTransactions)=>{
         if(transaction.TransactionInformation === "Correcto"){
             goodPayments++;
         }
-        
-
     });
 
    return goodPayments;
-
 }
 
 const getBadPayments= (accountTransactions)=>{
@@ -351,13 +320,10 @@ const getBadPayments= (accountTransactions)=>{
         if(transaction.TransactionInformation === "Incorrecto"){
             badPayments++;
         }
-        
-
     });
 
    return badPayments;
 }
-
 
 module.exports = {
     calculateQuantitativeValues: calculateQuantitativeValues
